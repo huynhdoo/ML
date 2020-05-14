@@ -11,4 +11,4 @@ A recurrent neural network for the purpose of determining the sentiment of a mov
 **Udacity Machine learning Engineer Nanodegree project.**
 A plagiarism detector that examines a text file and performs binary classification; labeling that file as either plagiarized or not, depending on how similar that text file is to a provided source text.
 
-*keywords : SageMaker, AWS, PyTorch, DeepLearning, Udacity*
+*keywords : SageMaker, AWS, Feature engineering, Scikitlearn, GradientBoosting, Udacity*
