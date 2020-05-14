@@ -56,8 +56,10 @@ def test_containment(complete_df, containment_fn):
     
     # known vals for first few files
     filenames = ['g0pA_taska.txt', 'g0pA_taskb.txt', 'g0pA_taskc.txt', 'g0pA_taskd.txt']
-    ngram_1 = [0.39814814814814814, 1.0, 0.86936936936936937, 0.5935828877005348]
-    ngram_3 = [0.0093457943925233638, 0.96410256410256412, 0.61363636363636365, 0.15675675675675677]
+    # ngram_1 = [0.39814814814814814, 1.0, 0.86936936936936937, 0.5935828877005348]
+    # ngram_3 = [0.0093457943925233638, 0.96410256410256412, 0.61363636363636365, 0.15675675675675677]
+    ngram_1 = [0.3617021276595745, 1.0, 0.8487394957983193, 0.5225225225225225]
+    ngram_3 = [0.00975609756097561, 0.9635416666666666, 0.6084905660377359, 0.15934065934065933]
     
     # results for comparison
     results_1gram = []
@@ -68,13 +70,12 @@ def test_containment(complete_df, containment_fn):
         val_3 = containment_fn(complete_df, 3, filenames[i])
         results_1gram.append(val_1)
         results_3gram.append(val_3)
-        
+    
     # check correct results
     assert all(np.isclose(results_1gram, ngram_1, rtol=1e-04)), \
-    'n=1 calculations are incorrect. Double check the intersection calculation.'
-    # check correct results
+        'n=1 calculations are incorrect. Double check the intersection calculation.'
     assert all(np.isclose(results_3gram, ngram_3, rtol=1e-04)), \
-    'n=3 calculations are incorrect.'
+        'n=3 calculations are incorrect.'  
     
     _print_success_message()
     
@@ -101,7 +102,8 @@ def test_lcs(df, lcs_word):
     assert test_val<=1.0, 'It appears that the value is not normalized; expected a value <=1, got: '+str(test_val)
     
     # known vals for first few files
-    lcs_vals = [0.1917808219178082, 0.8207547169811321, 0.8464912280701754, 0.3160621761658031, 0.24257425742574257]
+    # lcs_vals = [0.1917808219178082, 0.8207547169811321, 0.8464912280701754, 0.3160621761658031, 0.24257425742574257]
+    lcs_vals = [0.23893805309734514, 0.8211009174311926, 0.8382978723404255, 0.350253807106599, 0.26540284360189575]
     
     # results for comparison
     results = []
