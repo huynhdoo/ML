@@ -6,7 +6,7 @@
 ### Ressources
 #### Articles
 - [Deep Learning COVID-19 Features on CXR using Limited Training Data Sets](https://arxiv.org/pdf/2004.05758.pdf)
-- [Covid-19: automatic detection from X-ray images utilizing transfer learning with convolutional neural networks] (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7118364/)
+- [Covid-19: automatic detection from X-ray images utilizing transfer learning with convolutional neural networks](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7118364/)
 
 #### Datasets
 - [Open database of COVID-19 cases with chest X-ray or CT images](https://github.com/ieee8023/covid-chestxray-dataset)
