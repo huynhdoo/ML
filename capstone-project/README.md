@@ -1,7 +1,16 @@
 # Capstone Proposal
 
 ## Domain Background
-Student briefly details background information of the domain from which the project is proposed. Historical information relevant to the project should be included. It should be clear how or why a problem in the domain can or should be solved. Related academic research should be appropriately cited. A discussion of the student's personal motivation for investigating a particular problem in the domain is encouraged but not required.
+*Objective : student briefly details background information of the domain from which the project is proposed. Historical information relevant to the project should be included. It should be clear how or why a problem in the domain can or should be solved. Related academic research should be appropriately cited. A discussion of the student's personal motivation for investigating a particular problem in the domain is encouraged but not required.*
+
+### Ressources
+#### Articles
+- [Deep Learning COVID-19 Features on CXR using Limited Training Data Sets](https://arxiv.org/pdf/2004.05758.pdf)
+- [Covid-19: automatic detection from X-ray images utilizing transfer learning with convolutional neural networks] (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7118364/)
+
+#### Datasets
+- [Open database of COVID-19 cases with chest X-ray or CT images](https://github.com/ieee8023/covid-chestxray-dataset)
+
 
 ## Problem Statement
 Student clearly describes the problem that is to be solved. The problem is well defined and has at least one relevant potential solution. Additionally, the problem is quantifiable, measurable, and replicable.
