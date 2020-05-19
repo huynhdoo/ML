@@ -12,3 +12,9 @@ A recurrent neural network for the purpose of determining the sentiment of a mov
 A plagiarism detector that examines a text file and performs binary classification; labeling that file as either plagiarized or not, depending on how similar that text file is to a provided source text.
 
 *keywords : SageMaker, AWS, Feature engineering, Scikitlearn, GradientBoosting, Udacity*
+
+## [Prostate cancer diagnosis](https://github.com/huynhdoo/ML/tree/master/prostate-cancer-diagnosis)
+**Udacity Machine learning Engineer Nanodegree Capstone project.**
+An AI web application using deep learning model that can read a prostate biopsy image and return a possible diagnosis of Gleason score/ISUP grade to the end-user.
+
+*keywords : Healthcare, digital pathology, prostate cancer, pyTorch, CNN, Udacity*
