@@ -5,9 +5,7 @@ Do HUYNH
 May 19th, 2020
 
 ---
-##
 ## Biopsy prostate cancer diagnosis: a digital pathology web app
-##
 ---
 
 ### Domain Background 
