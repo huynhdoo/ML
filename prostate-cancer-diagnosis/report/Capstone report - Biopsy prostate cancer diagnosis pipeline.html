@@ -1,0 +1,214 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capstone report - Biopsy prostate cancer diagnosis pipeline.md</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__html"><h1 id="machine-learning-engineer-nanodegree">Machine Learning Engineer Nanodegree</h1>
+<h2 id="capstone-project-automating-prostate-cancer-diagnosis-on-whole-slide-image-biopsy-using-patches-extraction-and-tensorflow">Capstone Project: automating prostate cancer diagnosis on whole-slide image biopsy using patches extraction and TensorFlow</h2>
+<p>Do Huynh<br>
+<a href="http://www.github.com/huynhdoo/">Github</a> | <a href="http://www.linkedin.com/in/huynhdoo/">Linkedin</a><br>
+June 18th, 2020</p>
+<h2 id="i.-definition">I. Definition</h2>
+<h3 id="project-overview">Project Overview</h3>
+<p>According to the world health organization, cancer is the second leading cause of death in the world with 9,6 millions death in 2018<sup class="footnote-ref"><a href="#fn1" id="fnref1">1</a></sup> (after cardiovascular disease). Moreover according to the world cancer research fund, prostate cancer is the second most common cancer in men with 1.3 millions new case in 2018<sup class="footnote-ref"><a href="#fn2" id="fnref2">2</a></sup>.</p>
+<p><img src="https://www.mountelizabeth.com.sg/images/default-source/default-album/surgery-prostate-cancer.jpg?sfvrsn=e70a871e_4" alt="prostate cancer" width="600" height="400"><br>
+<em>source: <a href="https://www.mountelizabeth.com.sg/">Mount Elizabeth Hospital</a></em></p>
+<p>In the healthcare system, the role of a histopathologist (from greek “histos” = tissue) is to search and detect cancerous cells from a tissue sample (biopsy). It is a sensible responsability depending on the experience of the specialist and the technicals conditions. With the high definition digitalization of microscopy images (call Whole-Slide Image WSI) and the progress of AI image analysis during the last decade, digital pathology has made great improvement in pathology detection assisting the medicals professionnals in their diagnosis and prognosis assumptions <sup class="footnote-ref"><a href="#fn3" id="fnref3">3</a></sup>.</p>
+<p><img src="https://media.eurekalert.org/multimedia_prod/pub/web/184985_web.jpg" alt="Digital slide" width="600" height="400"><br>
+<em>source: <a href="%5Bhttps://www.eurekalert.org/multimedia/pub/184985.php%5D(https://www.eurekalert.org/multimedia/pub/184985.php)">section of Pathology and Tumour Biology, University of Leeds</a></em></p>
+<p>In April 2020, two european medical research institutions (Karolinska Institute and Radboud University Medical) have publish together the largest known  dataset of prostate biopsy whole-slide image under the form of a Kaggle competition:  <a href="https://www.kaggle.com/c/prostate-cancer-grade-assessment/data">Prostate cANcer graDe Assessment Challenge</a>. This dataset is composed of 10,616 prostate biopsies whole-slide images scored by pathologists from the 2 medical institutions.</p>
+<h3 id="problem-statement">Problem Statement</h3>
+<p>Today, the ‘gold standard’ in prostate cancer detection is the human visual diagnosis<sup class="footnote-ref"><a href="#fn4" id="fnref4">4</a></sup> : from a whole slide image, a pathologist detect some known cellular architecture, call Gleason’s pattern, that inform on the development state of the tumor.</p>
+<p><img src="https://www.prostateconditions.org/images/about/murtagh7e_c114_f04-2.png" alt="Gleason's pattern" width="600" height="400"></p>
+<p>The different pattern are scored according a international grade system call ISUP Grade (from the International Society of Urological Pathology) which globally indicate the state of the cancerous cells (from 1=localized/benign to 5=spreaded/agressive).</p>
+<p><img src="https://storage.googleapis.com/kaggle-media/competitions/PANDA/Screen%20Shot%202020-04-08%20at%202.03.53%20PM.png" alt="Gleason grading process"><br>
+<em>Source: <a href="https://www.kaggle.com/c/prostate-cancer-grade-assessment/overview/description">Prostate cANcer graDe Assessment (PANDA) Challenge</a></em></p>
+<p>Detecting and determining the good score depends directly on the pathologist’s experience and working conditions which can lead to important variation in the cancer diagnosis. Our project will try to propose a solution that use deep learning techniques to automatically evaluate the ISUP grade of a given biopsy image and in fine help pathologist make accurate and faster diagnosis of prostate cancer tissue.</p>
+<h3 id="metrics">Metrics</h3>
+<p>The goal of our machine learning solution is to predict the ISUP grade from a whole slide prostate biopsy which is a multi-class categorical problem. Following the Prostate cANcer graDe Assessment Challenge organizers, the evaluation of the submission will be calculate with <strong>the quadratic weighted kappa</strong><sup class="footnote-ref"><a href="#fn5" id="fnref5">5</a></sup>:</p>
+<p><img src="https://render.githubusercontent.com/render/math?math=%5Ckappa=1-%5Cfrac%7B%5Csum%7Bi,j%7Dw%7Bij%7DO%7Bij%7D%7D%7B%5Csum%7Bi,j%7Dw%7Bij%7DE%7Bij%7D%7D" alt="quadratic weighted kappa"></p>
+<p>with:</p>
+<ul>
+<li>O: an N x N histogram matrix such that Oij corresponds to the number of isup_grades i (actual) that received a predicted value j</li>
+<li>W: an N x N matrix of weights Wij calculated on the difference between actual i and predicted values j</li>
+</ul>
+<p><img src="https://render.githubusercontent.com/render/math?math=w_%7Bi,j%7D=%5Cfrac%7B%5Cleft(i-j%5Cright)%5E2%7D%7B%5Cleft(N-1%5Cright)%5E2%7D" alt="matrix of weights"></p>
+<ul>
+<li>E: an NxN histogram matrix of expected outcomes, E, calculated assuming that there is no correlation between values. This is calculated as the outer product between the actual histogram vector of outcomes and the predicted histogram vector, normalized such that E and O have the same sum.</li>
+</ul>
+<p>This specific metric measures the agreement between two categorical ratings varying from negative (less agreement than expected by chance) to 1 (complete agreement). This continuous score variable tend to penalize too far answer from the ground truth but also reward close answer. In fact, it is a more tolerant metrics than an absolute categorical accuracy metric and also tend to avoid unbalanced bias distribution.</p>
+<h2 id="ii.-analysis">II. Analysis</h2>
+<h3 id="data-exploration">Data Exploration</h3>
+<p>The provided PanDa dataset is composed of 10616 biopsy whole-slide image (.tiff format), 10516 labelled masks and a table (.csv format) of corresponding gleason score / ISUP grade from the two medical institutes.</p>
+<p>The score table contains 4 columns with 10616 unique image ID, 2 providers (Radboud and Karolinska institutes), 11 gleason’s score combinaison (from 0+0 to 5+5), 6 ISUP grades (from 0 to 5). Both institute provide equivalent number of slides.</p>
+<p>![train_df_head()](<a href="https://github.com/huynhdoo/ML/blob/master/prostate-cancer-diagnosis/images/train_head.png?raw=true">https://github.com/huynhdoo/ML/blob/master/prostate-cancer-diagnosis/images/train_head.png</a></p>
+<p>Each WSI contains 3 levels definition (original, x4, x16) than can be open independently. The original definition target for specific medical screen device can not be read and stand fully on local memory. It must be read by region. The labelled mask files are also under format .tiff. They contains in the first color channel a pixel value indicating the gleason’s grade scored by a pathologist. However, each institute use different scoring scale (from 1 to 3 for Karolinska institute and 0 to 5 for Radboud institute). For this main reason, we will not used the mask for this version of our project.</p>
+
+<table>
+<thead>
+<tr>
+<th>Slide sample</th>
+<th>Mask sample</th>
+<th>Mask on slide</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img src="https://raw.githubusercontent.com/huynhdoo/ML/master/prostate-cancer-diagnosis/images/slide.png" alt="slide"></td>
+<td><img src="https://raw.githubusercontent.com/huynhdoo/ML/master/prostate-cancer-diagnosis/images/mask.png" alt="mask"></td>
+<td><img src="https://raw.githubusercontent.com/huynhdoo/ML/master/prostate-cancer-diagnosis/images/slide_with_mask.png" alt="slide with mask" width="70" height="400"></td>
+</tr>
+</tbody>
+</table><p>After checking the table, we found only one item with an incoherent value between gleason score 3+4 and ISUP grade 2 (should be 3). We have corrected this line directly during data preprocessing.</p>
+<p><img src="https://raw.githubusercontent.com/huynhdoo/ML/master/prostate-cancer-diagnosis/images/train_mislabelled_item.png" alt="train_error"></p>
+<h3 id="exploratory-visualization">Exploratory Visualization</h3>
+<p>The distribution of the slide by ISUP grade show that the dataset is unbalanced between the grades [0, 1] and [2, 5]. In fact, their more cases where the biopsy reveal no tumor (+50% of the cases).</p>
+<p><img src="https://raw.githubusercontent.com/huynhdoo/ML/master/prostate-cancer-diagnosis/images/isup.png" alt="Isup grade repartition" width="600" height="400"><br>
+<em>Number of biopsy slides by ISUP grade from PanDa dataset 2020</em></p>
+<p>Moreover, if we split the distribution between the two data provider, we can see that Karolinska institute propose a majority of cases grade 0 to 1 since Radboud institute present a majority of cases grade 3 to 5.</p>
+<p><img src="https://raw.githubusercontent.com/huynhdoo/ML/master/prostate-cancer-diagnosis/images/isup_provider.png" alt="Isup grade by provider repartition" width="600" height="400"><br>
+<em>Number of biopsy slides by ISUP grade and provider from PanDa dataset 2020</em></p>
+<p>Each slide has 3 levels corresponding to a downsampling factor of 1, 4 and 16. The original image dimensions are quite large (typically between 5.000 and 40.000 pixels in both height and weight). The Tagged Image File Format (TIFF) format can contains some additionnals informations like dimensions, dowsample factor, etc.</p>
+<p><img src="https://raw.githubusercontent.com/huynhdoo/ML/master/prostate-cancer-diagnosis/images/slide_informations.png" alt="slide informations"></p>
+<p>Depending on the laboratory procedures, slides can appear in different colors, rotations, brightness. Because the biopsy tissue represents a small part of the whole slide (less than 20%), we should normalize the size before training by extracting different tile/region of tissue from the original image.</p>
+<h3 id="algorithms-and-techniques">Algorithms and Techniques</h3>
+<p>Since the advent of deep learning, many AI algorithm using neural network have been test and deploy on medical image analysis<sup class="footnote-ref"><a href="#fn6" id="fnref6">6</a></sup>. Specifically, two recent studies from the Kaggle competition organizers have demonstrated the relevance of Convolutional Neural Network (CNN) on this type of computer vision problem<sup class="footnote-ref"><a href="#fn7" id="fnref7">7</a></sup> <sup class="footnote-ref"><a href="#fn8" id="fnref8">8</a></sup>. In the case of our project, we will also use CNN for our training and predicting model.</p>
+<p>One of the limit of actual CNN is the size of the input which need to fit into a maximum height, weight, channel. In the specific case of biopsy whole-slide image, the image are too large to be treated directly by the neural network. The first step of our solution consist in reducing the size of the slide by selecting N relevant patches of the original image (1). Then, for optimal computation, the extracted patches are compress and group together into batch of files that can be read as fast as possible during training process (2). Since the files are ready, we can next apply any image preprocessing needed, split our labelled images into training, validation and testing dataset, train our CNN model and evaluate his performance (3). The main steps are detailed below:</p>
+<p><strong>(1) Extract patches from WSI</strong></p>
+<ul>
+<li>Correct any error in the dataset table</li>
+<li>Match images and ISUP grade from dataset</li>
+<li>For each image in the dataset:<br>
+– Extract all patches of size S x S<br>
+– Score and order each patches by pixel color intensities<br>
+– Select N patches with most pixel intensity<br>
+– Concat N selected patches into a unique image<br>
+– Save generated image with corresponding ISUP grade label</li>
+</ul>
+<p><strong>(2) Export patches to TFRecords</strong></p>
+<ul>
+<li>Load patches image and label</li>
+<li>For each patches:<br>
+– Compress the image<br>
+– Regroup image into batch of files<br>
+– Save images with label into TFRecords files<br>
+– Put generated TFRecords files on Google Cloud Storage</li>
+</ul>
+<p><strong>(3) CNN training</strong></p>
+<ul>
+<li>Split files into training, validation and testing dataset</li>
+<li>For each image in training dataset:<br>
+– Normalize image (set pixel to range 0 to 1)<br>
+– Process random augmentation (flip horizontally, vertically)<br>
+– Shuffle image order</li>
+<li>Define a CNN model:
+<ul>
+<li>Load pre-trained CNN model</li>
+<li>Add a 6 class output layer</li>
+<li>Define kappa loss function</li>
+<li>Define optimizer and learning curve function</li>
+</ul>
+</li>
+<li>Split into K folds training/validation dataset for cross validation</li>
+<li>Train CNN model on each training/validation fold dataset</li>
+<li>Save the weights of the trained CNN</li>
+<li>Test predictions of the model on the testing dataset</li>
+</ul>
+<h3 id="benchmark">Benchmark</h3>
+<p>The Kaggle challenge leaderboard is a good starting point to benchmark our solution with other competitors. The submitted predictions are made on around 1000 unknown biopsy. But this measure is only on the absolute accuracy of the machine learning model, not on his capacity to be easily deploy. However that help us figure out what is the possible best result on the given dataset without any resources concern.</p>
+<p>For the purpose of our project, we can take as base performance on a more realistic goal: according to the institutes organizers, the actual kappa agreement between expert pathologist in inter-study is between 0.60 and 0.73<sup class="footnote-ref"><a href="#fn7" id="fnref7:1">7</a></sup> <sup class="footnote-ref"><a href="#fn8" id="fnref8:1">8</a></sup>. Building an AI model that reach or outperform this range will mean that we have a possible helpful model.</p>
+<h2 id="iii.-methodology">III. Methodology</h2>
+<h3 id="data-preprocessing">Data Preprocessing</h3>
+<p>As we have seen previously, the image slides are too large to be process directly by a CNN which can only work on a maximum size between 128x128 pixels (on GPU) and 512x512 pixels (on TPU). To read the slide, we must reduce the information to the most relevant part by extracting some patches from the original image and concat them into a single image that fit into any CNN. Moreover, the relevant tissue occupy less than 20% of all the slide size.</p>
+<p>For this purpose, we have first extracted all the patches of 128x128 pixels from the lowest level dimensions. To read specific region of a WSI without loading all the image in memory, we have used the python interface of the <a href="https://openslide.org/api/python/">Open slide library</a>. Then, each patches are scored and ordered by the sum of their pixel color intensities (from 0=black to 255=white). Why using color intensities ? The pathology process use a coloring technic that stain in pink and purple (call hematoxylin and eosin staining<sup class="footnote-ref"><a href="#fn9" id="fnref9">9</a></sup>) the tissue and nuclear cells. Knowing that in one hand the concentration of nuclear cells reveals the development of cancerous cells and in other hand, nuclear cells stain in purple are darker than other cellular tissue, we can reasonably assume that a darker patch are more relevant than a lighter patch.<br>
+After scoring the different patches by pixel color intensities, we keep the N firsts patches and concat them into a square image of size 128x128xN (ex: 128x128x16).</p>
+<p><img src="https://i.ibb.co/RzSWP56/convert.png" alt="patches"><br>
+<em>Source: <a href="https://www.kaggle.com/iafoss/panda-16x128x128-tiles">https://www.kaggle.com/iafoss/panda-16x128x128-tiles</a></em></p>
+<p>As the dataset is quite small for a deep learning purpose, we have double its size by generating 2 different patches split. The second split is half shifted from the first grid so it generates different patches from the same image (like 2 eyes or cameras looking at the same object).</p>
+<p><img src="https://raw.githubusercontent.com/huynhdoo/ML/master/prostate-cancer-diagnosis/images/patches-128x16.png" alt="image patches 128x16" width="600" height="400"><em>128x128x16 patches on lowest level slide definition</em></p>
+<p>All generated images (10616 x 2 = 21232 images) are then saved and split into different ISUP grade folder on Google Cloud Storage for the next processing. All this previous steps are implemented in the notebook <strong><a href="https://github.com/huynhdoo/ML/blob/master/prostate-cancer-diagnosis/PANDA%201%20-%20Extract%20patches%20from%20WSI.ipynb">PANDA 1 - Extract patches from WSI.ipynb</a></strong></p>
+<h3 id="implementation">Implementation</h3>
+<p>Training a CNN even on a GPU need a lot of times and resources. To make this step faster, Google Colab Notebook provide some free TPU (Tensor Process Unit) that are specially optimized for tensor computation. But with high computation flow, the file reading process can slow down the whole calculation. In consequence, the image files must be group into large files (format TFRecords of size 100 to 200 Mb) that can be read directly by CNN running on a TPU board. The ISUP grade of each image are also encoded as parameters. The aim of our second notebook is to prepare this optimized files and saved them again to Google Cloud Storage. All this part is implemented and documented in the notebook <strong><a href="https://github.com/huynhdoo/ML/blob/master/prostate-cancer-diagnosis/PANDA%202%20-%20Export%20patches%20to%20TFRecords.ipynb">PANDA 2 - export to TFRecords.ipynb</a></strong>.</p>
+<p>We have choose to build the convolutionnal neural network with <a href="https://keras.io/">Tensorflow/Keras architecture</a>. Indeed, TPU board host by Google colab are optimized for Tensorflow architecture (even if we could also read TFRecord file with pytorch using appropriate library). Keras is a high level API build on Tensorflow that help iterating fastly during model definition.</p>
+<p>Assuming that the datas are previously encoded in large TFrecords file, we use Tensorflow dataset to load and read on the fly the images and labels (ISUP grade). The whole dataset is split and batch into training, validation and test dataset (respectively 85%, 12% and 3% size ratio). On the training dataset, we make some data normalization (set pixel value in range 0 to 1), data augmentation (image flip) and data balanced (apply a weight on the different target class to avoid distribution training effect). The validation dataset is used during the training process while the test dataset is keep aside for a final model evaluation. For accuracy robustness, we also apply a cross validation process by splitting our training step in K-folds (10 folds).</p>
+<p><img src="https://github.com/huynhdoo/ML/blob/master/prostate-cancer-diagnosis/images/dataset_split.png?raw=true" alt="dataset split"></p>
+<p>Using transfer learning, we build our CNN model on a EfficientNet architecture pre-trained on ImageNet dataset. Publish in 2019, EfficientNet<sup class="footnote-ref"><a href="#fn10" id="fnref10">10</a></sup> is an ensemble of deep learning models for computer vision that optimize the trade-off between the number of parameters to train and the final accuracy. For now, there are 7 models (from B0 to B7) that can be used progressively to increase the performance of the final model. As output layer, we just add to EfficientNet a 6 dimensions one-hot encode vector corresponding to the predict ISUP grade (from 0 to 5).</p>
+<p><img src="https://1.bp.blogspot.com/-oNSfIOzO8ko/XO3BtHnUx0I/AAAAAAAAEKk/rJ2tHovGkzsyZnCbwVad-Q3ZBnwQmCFsgCEwYBhgL/s1600/image3.png" alt="EfficientNet" width="500" height="400"><br>
+<em>Source: <a href="https://ai.googleblog.com/2019/05/efficientnet-improving-accuracy-and.html">https://ai.googleblog.com/2019/05/efficientnet-improving-accuracy-and.html</a></em></p>
+<p>To avoid breaking pre-trained model, we apply a “mountain” learning curve that starts  with a low learning rate during the first epochs (3e-5), going up and finishing down back to starting rate during 30 epochs.</p>
+<p><img src="https://github.com/huynhdoo/ML/blob/master/prostate-cancer-diagnosis/images/learning_curve.png?raw=true" alt="Learning curve"><br>
+<em>Learning rate schedule: from 3e-05 to 0.0012 back to 3-05 during 30 epochs</em></p>
+<p>Our initial solution train on 16 low level definition patches of 128x128px with transfer learning from EfficientNet achieve a score on Kaggle test of <strong>0.68 (B0), 0.70 (B4) and 0.73 (B6)</strong>. These initials results are all in the range of the inter-rating between expert pathologist.</p>
+<p><img src="https://github.com/huynhdoo/ML/blob/master/prostate-cancer-diagnosis/images/EfficientNetB6_training_loss_073.png?raw=true" alt="training curves 0.73" width="600" height="600"><br>
+<em>EfficientNetB6 model train kappa and loss during 50 epochs - 0.73 kappa score</em></p>
+<p>After the training process, we make some predictions on the testing dataset to evaluate how our final model generalize on unknown datas.  All this last part is implemented and documented in the notebook <strong><a href="https://github.com/huynhdoo/ML/blob/master/prostate-cancer-diagnosis/PANDA%203%20-%20CNN%20training%20on%20TPU.ipynb">PANDA 3 - CNN training on TPU.ipynb</a></strong>.</p>
+<h3 id="refinement">Refinement</h3>
+<p><img src="https://raw.githubusercontent.com/huynhdoo/ML/master/prostate-cancer-diagnosis/images/patches-128x36.png" alt="image patches 128x32" width="600" height="400"><em>128x128x36 patches on medium level slide definition</em></p>
+<p>Some other solutions propose by Kaggle competitors achieve a better score by using higher definition image and larger input size. Indeed, with the same parameters, when we fit our model on 36 medium definition patches of 128x128px and same training parameters, we improve significantly our kappa score <strong>up to 0.80</strong> which out-performed the upper score of the gold standard.</p>
+<p><img src="https://raw.githubusercontent.com/huynhdoo/ML/master/prostate-cancer-diagnosis/images/EfficientNetB6_training_loss_080.png" alt="training curves 0.80" width="600" height="500"><br>
+<em>EfficientNetB6 model train kappa and loss during 30 epochs - 0.80 kappa score</em></p>
+<h2 id="iv.-results">IV. Results</h2>
+<h3 id="model-evaluation-and-validation">Model Evaluation and Validation</h3>
+<p>In the aim to help our model generalize inputs datas and prevent overfitting, we have introduce some random variations on the inputs. We have also doubled the size of the original dataset by applying two different window stride during the patches generation step. And for robustness of our model, we apply a cross validation method to train and validate our model on different split of our initial dataset.</p>
+<p>For final test accuracy, we have kept aside 512 images for an internal test before submitting our model to Kaggle evaluation.</p>
+<p>If we look at the correlation matrix, we can see that the main mislabelled slides are around ISUP grade 1 and 4. Our model tend to be more pessimist than the ground truth. In the case of medical diagnosis, that is better than underestimate the problem.</p>
+<p><img src="https://github.com/huynhdoo/ML/blob/master/prostate-cancer-diagnosis/images/confusion_matrix.png?raw=true" alt="correlation matrix" width="600" height="500"></p>
+<h3 id="justification">Justification</h3>
+<p><strong>Our final CNN model achieve a score of 0.80 kappa agreement on unseen test dataset (both internal and external)</strong>. Although a very simple patches selection, this is quite a promising model that exceed the inter-ratings standard evaluation by expert pathologist. The final notebook for Kaggle submission is details in <strong><a href="https://github.com/huynhdoo/ML/blob/master/prostate-cancer-diagnosis/PANDA%204%20-%20Kaggle%20model%20inference.ipynb">PANDA 4 - Kaggle model inference.ipynb</a></strong></p>
+<p>At the moment, the best solution on <a href="https://www.kaggle.com/c/prostate-cancer-grade-assessment/leaderboard">Kaggle prostate cancer grade assessment leaderboard</a> achieve 0.91 kappa score! Our implementation as a generic pipeline can be clearly improve and also reuse any pre-trained model including the best one. Moreover, with the optimization on TPU computing, <strong>the training process is quite fast and cheap with less than 1 hour to fit a model on 30 epochs</strong>.</p>
+<h2 id="v.-conclusion">V. Conclusion</h2>
+<h3 id="predictions-visualization">Predictions visualization</h3>
+<p>Our model can now diagnose prostate cancer ISUP grade from whole-slide image biopsy with an estimated kappa confidence of 0.80. Here, we can see some predicted label corresponding with ground truth:</p>
+<p><img src="https://github.com/huynhdoo/ML/blob/master/prostate-cancer-diagnosis/images/predictions.png?raw=true" alt="predictions" width="600" height="600"></p>
+<h3 id="reflection">Reflection</h3>
+<p>In the limitation of the given dataset, our solution out-performed the gold standard of human prostate cancer grading with a kappa agreement of 0.80. This baseline solution show that with a minimal, fast and low-cost deep learning CNN based on pre-trained EfficientNet architecture, prostate cancer detection on inter-studies biopsy can be achieved. Of course, further developments should be done to improve the overall performance and build a strong model that generate consistent ratings over any biopsies from other institutions.</p>
+<p>Beyond accuracy, our solution shows 3 main points:<br>
+(1) The image patching operation is an essential and efficient step prior to deep learning training.<br>
+(2) Batching images into optimized files for processor drastically reduce the training time and by consequence the iterative process of modeling.<br>
+(3) Transfer learning from pre-trained EfficientNet architecture is a good starting point for Prostate cancer diagnosis from biopsy whole-slide image.</p>
+<h3 id="improvement">Improvement</h3>
+<p>During image patches extraction, we have to made a trade-off between image definition and memory capacities. Indeed, with a higher definition, we can surely have better information for the training process but it takes more memory to train. Even with a TPU process, we can only manage a maximum of 768x768 pixel image. Having a too much deep zoom level will limit the vision zone although retaining a too low level zoom will produce too much noises.</p>
+<p>In our opinion, one the biggest potential improvement is to develop a better patches selection. A possible solution could be to train a CNN segmentation model on the given labelled mask to score each patches according to the recognize cellular pattern and filter non tissue or benign zone. This segmentation step could help removing any noise on the dataset before training and in fine improve the model performance.</p>
+<h2 id="acknowledgement">Acknowledgement</h2>
+<p>Because <em>“I am just standing on the shoulders of giants - Isaac Newton”</em>, I am fully grateful for these inspiring works from machine learning magicians :</p>
+<ul>
+<li><a href="https://www.kaggle.com/iafoss/panda-16x128x128-tiles">Images patching</a></li>
+<li><a href="https://www.kaggle.com/ajenningsfrankston/scaled-tiles-with-efficient-net">Loss and metrics kappa function</a></li>
+<li><a href="https://www.kaggle.com/mgornergoogle/five-flowers-with-keras-and-xception-on-tpu">Keras training on TPU</a></li>
+<li><a href="https://www.kaggle.com/vgarshin/panda-keras-baseline">Keras kaggle baseline</a></li>
+</ul>
+<hr class="footnotes-sep">
+<section class="footnotes">
+<ol class="footnotes-list">
+<li id="fn1" class="footnote-item"><p>World health organization - <a href="https://www.who.int/news-room/fact-sheets/detail/cancer">https://www.who.int/news-room/fact-sheets/detail/cancer</a> <a href="#fnref1" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn2" class="footnote-item"><p>World cancer research fund - <a href="https://www.wcrf.org/dietandcancer/cancer-trends/prostate-cancer-statistics">https://www.wcrf.org/dietandcancer/cancer-trends/prostate-cancer-statistics</a> <a href="#fnref2" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn3" class="footnote-item"><p>Artificial intelligence in digital pathology — new tools for diagnosis and precision oncology - <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6880861/">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6880861/</a> <a href="#fnref3" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn4" class="footnote-item"><p>Clinical histopathology of the biopsy cores : <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1769959/">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1769959/</a> <a href="#fnref4" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn5" class="footnote-item"><p>PANDA challenge evaluation metrics - <a href="https://www.kaggle.com/c/prostate-cancer-grade-assessment/overview/evaluation">https://www.kaggle.com/c/prostate-cancer-grade-assessment/overview/evaluation</a> <a href="#fnref5" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn6" class="footnote-item"><p>The medical image analysis journal publish monthly a selection of the last research paper on deep learning techniques and algorithms apply to medical images (MRI, CT, echography, etc.) - <a href="https://www.sciencedirect.com/journal/medical-image-analysis/vol/62/suppl/C">https://www.sciencedirect.com/journal/medical-image-analysis/vol/62/suppl/C</a> <a href="#fnref6" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn7" class="footnote-item"><p>Pathologist-Level Grading of Prostate Biopsies with Artificial Intelligence - <a href="https://arxiv.org/abs/1907.01368">https://arxiv.org/abs/1907.01368</a> <a href="#fnref7" class="footnote-backref">↩︎</a> <a href="#fnref7:1" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn8" class="footnote-item"><p>Automated Gleason Grading of Prostate Biopsies using Deep Learning - <a href="https://arxiv.org/abs/1907.07980">https://arxiv.org/abs/1907.07980</a> <a href="#fnref8" class="footnote-backref">↩︎</a> <a href="#fnref8:1" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn9" class="footnote-item"><p>Hematoxylin and eosin stain <a href="https://en.wikipedia.org/wiki/H%26E_stain">https://en.wikipedia.org/wiki/H%26E_stain</a> <a href="#fnref9" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn10" class="footnote-item"><p>EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks - <a href="https://arxiv.org/abs/1905.11946">https://arxiv.org/abs/1905.11946</a> <a href="#fnref10" class="footnote-backref">↩︎</a></p>
+</li>
+</ol>
+</section>
+</div>
+</body>
+
+</html>
