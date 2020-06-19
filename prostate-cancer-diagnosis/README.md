@@ -20,7 +20,7 @@ Biopsy prostate cancer diagnosis: automating prostate cancer diagnosis on whole-
     - [PANDA 1 - Extract patches from WSI](./PANDA%201%20-%20Extract%20patches%20from%20WSI.ipynb)
     - [PANDA 2 - Export patches to TFRecords](./PANDA%202%20-%20Export%20patches%20to%20TFRecords.ipynb)
     - [PANDA 3 - CNN training on TPU](./PANDA%203%20-%20CNN%20training%20on%20TPU.ipynb)
-    - [PANDA 4 - Kaggle model inference](./)
+    - [PANDA 4 - Kaggle model inference](./PANDA%204%20-%20Kaggle%20model%20inference.ipynb)
  
 ### Usage
 The notebook are all autonomous and will install any necessary dependancies. Notebooks 1 to 3 should be run on [Google colab](https://colab.research.google.com/). Notebook 4 is runnable as [Kaggle kernel](https://www.kaggle.com/). 
