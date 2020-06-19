@@ -40,7 +40,7 @@ This project propose a solution that use deep learning techniques to automatical
 
 The notebook are all autonomous and will install any necessary dependancies. Notebooks 1 to 3 should be run on [Google colab](https://colab.research.google.com/). Notebook 4 is runnable as [Kaggle kernel](https://www.kaggle.com/). 
 
-You will also need a a [Google cloud storage bucket](https://cloud.google.com/storage) to store generated patches. For convenience, already generated patches are publicly available with read-only access.
+You will also need a [Google cloud storage bucket](https://cloud.google.com/storage) to store generated patches. For convenience, already generated patches are publicly available with read-only access.
 
 They are also directly accessibles following these read-only links:
 - [PANDA 1 - Extract patches from WSI (colab notebook)](https://colab.research.google.com/drive/1LbvovE3QRAqwhEnfTnUKqGr11Xa8GzYH?usp=sharing)
